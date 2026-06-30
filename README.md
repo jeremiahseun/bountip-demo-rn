@@ -1,1 +1,1 @@
-# bountip-demo-rn
+# Bountip Demo RN
