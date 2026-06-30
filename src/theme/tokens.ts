@@ -1,6 +1,7 @@
 export const colors = {
   accent: '#CC5F3D',
   background: '#F6F2EA',
+  danger: '#B3432F',
   border: '#E0D5C6',
   surface: '#FFFDF8',
   surfaceMuted: '#EFE6DA',
@@ -21,6 +22,7 @@ export const spacing = {
 } as const;
 
 export const radius = {
+  md: 12,
   lg: 16,
   xl: 24,
   full: 999,
