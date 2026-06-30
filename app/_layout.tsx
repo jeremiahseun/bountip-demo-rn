@@ -22,7 +22,10 @@ export default function RootLayout() {
             headerTitleStyle: { color: colors.textPrimary },
             contentStyle: { backgroundColor: colors.background },
           }}
-        />
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="products/[id]" options={{ title: 'Product details' }} />
+        </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
