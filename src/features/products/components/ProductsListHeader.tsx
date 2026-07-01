@@ -1,13 +1,14 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { AppButton } from '@/components/ui/AppButton';
 import { AppInput } from '@/components/ui/AppInput';
 import { AppText } from '@/components/ui/AppText';
+import { Icon } from '@/components/ui/Icon';
 import { CategoryChip } from '@/features/products/components/CategoryChip';
 import { LastUpdatedLabel } from '@/features/products/components/LastUpdatedLabel';
 import { ProductsBanner } from '@/features/products/components/ProductsBanner';
 import { ALL_CATEGORY, type ProductFilterCategory } from '@/features/products/constants';
 import { spacing } from '@/theme/tokens';
+import { useTheme, useThemedStyles, type Theme } from '@/theme/useTheme';
 
 type ProductsListHeaderProps = {
   categories: ProductFilterCategory[];
@@ -15,7 +16,9 @@ type ProductsListHeaderProps = {
   lastUpdated: string | null;
   onCategoryPress: (category: ProductFilterCategory) => void;
   onClearFilters: () => void;
+  onClearSearch: () => void;
   onSearchChange: (value: string) => void;
+  resultCount: number;
   searchValue: string;
   selectedCategory: ProductFilterCategory;
   showClearFilters: boolean;
@@ -31,39 +34,39 @@ export function ProductsListHeader({
   lastUpdated,
   onCategoryPress,
   onClearFilters,
+  onClearSearch,
   onSearchChange,
+  resultCount,
   searchValue,
   selectedCategory,
   showClearFilters,
 }: ProductsListHeaderProps) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
+
   return (
     <View style={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.copy}>
-          <AppText variant="eyebrow">Product catalogue</AppText>
-          <AppText variant="heading">Browse the latest products</AppText>
-          <AppText color="secondary">
-            Search by title, filter by category, and refresh the catalogue whenever you need a new
-            snapshot.
-          </AppText>
-          <LastUpdatedLabel value={lastUpdated} />
-        </View>
-
-        {showClearFilters ? <AppButton label="Clear filters" onPress={onClearFilters} /> : null}
+      <View style={styles.copy}>
+        <AppText color="accent" variant="eyebrow">
+          Product catalogue
+        </AppText>
+        <AppText variant="heading">Browse the latest products</AppText>
+        <LastUpdatedLabel value={lastUpdated} />
       </View>
-
-      {error ? <ProductsBanner message={error} /> : null}
 
       <AppInput
         accessibilityLabel="Search products"
         autoCapitalize="none"
         autoCorrect={false}
-        label="Search by product title"
+        leadingIcon="search"
         onChangeText={onSearchChange}
-        placeholder="Search products"
+        onClear={onClearSearch}
+        placeholder="Search by product title"
         returnKeyType="search"
         value={searchValue}
       />
+
+      {error ? <ProductsBanner message={error} /> : null}
 
       <View style={styles.filters}>
         <AppText variant="label">Categories</AppText>
@@ -80,28 +83,63 @@ export function ProductsListHeader({
           </View>
         </ScrollView>
       </View>
+
+      <View style={styles.resultsRow}>
+        <AppText color="muted" variant="caption">
+          {resultCount} {resultCount === 1 ? 'result' : 'results'}
+        </AppText>
+
+        {showClearFilters ? (
+          <Pressable
+            accessibilityLabel="Clear filters"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={onClearFilters}
+            style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}
+          >
+            <Icon color={colors.accent} name="close" size={14} />
+            <AppText color="accent" variant="label">
+              Clear filters
+            </AppText>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  chips: {
-    gap: spacing.sm,
-    paddingBottom: spacing.sm,
-    paddingTop: spacing.xs,
-  },
-  content: {
-    gap: spacing.lg,
-    paddingBottom: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  copy: {
-    gap: spacing.sm,
-  },
-  filters: {
-    gap: spacing.sm,
-  },
-  header: {
-    gap: spacing.md,
-  },
-});
+const makeStyles = (_theme: Theme) =>
+  StyleSheet.create({
+    chips: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingBottom: spacing.xs,
+      paddingTop: spacing.xs,
+    },
+    clearButton: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.xs,
+    },
+    content: {
+      gap: spacing.lg,
+      paddingBottom: spacing.md,
+      paddingTop: spacing.sm,
+    },
+    copy: {
+      gap: spacing.sm,
+    },
+    filters: {
+      gap: spacing.sm,
+    },
+    pressed: {
+      opacity: 0.7,
+    },
+    resultsRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      minHeight: 20,
+    },
+  });

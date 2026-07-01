@@ -1,10 +1,17 @@
+import { StyleSheet, View } from 'react-native';
+
 import { AppText } from '@/components/ui/AppText';
+import { Icon } from '@/components/ui/Icon';
+import { spacing } from '@/theme/tokens';
+import { useTheme } from '@/theme/useTheme';
 
 type LastUpdatedLabelProps = {
   value: string | null;
 };
 
 export function LastUpdatedLabel({ value }: LastUpdatedLabelProps) {
+  const { colors } = useTheme();
+
   if (!value) {
     return null;
   }
@@ -17,8 +24,19 @@ export function LastUpdatedLabel({ value }: LastUpdatedLabelProps) {
   }).format(new Date(value));
 
   return (
-    <AppText color="muted" variant="label">
-      Updated {formatted}
-    </AppText>
+    <View style={styles.row}>
+      <Icon color={colors.textMuted} name="time-outline" size={14} />
+      <AppText color="muted" variant="caption">
+        Updated {formatted}
+      </AppText>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+});

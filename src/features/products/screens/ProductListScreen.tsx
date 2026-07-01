@@ -1,21 +1,37 @@
-import { Stack } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ProductsEmptyState } from '@/features/products/components/ProductsEmptyState';
 import { ProductsErrorState } from '@/features/products/components/ProductsErrorState';
+import { ProductsList } from '@/features/products/components/ProductsList';
 import { ProductsListHeader } from '@/features/products/components/ProductsListHeader';
 import { ProductsLoadingState } from '@/features/products/components/ProductsLoadingState';
-import { ProductCard } from '@/features/products/components/ProductCard';
 import { ALL_CATEGORY } from '@/features/products/constants';
-import { selectCategories, selectFilteredProducts, selectProducts, selectProductsError, selectProductsHydrated, selectProductsLastUpdated, selectProductsStatus, selectSearchQuery, selectSelectedCategory } from '@/features/products/store/productSelectors';
+import { useEnsureProductsLoaded } from '@/features/products/hooks/useEnsureProductsLoaded';
+import { useFavoritesStore } from '@/features/favorites/store/useFavoritesStore';
+import {
+  selectCategories,
+  selectFilteredProducts,
+  selectProducts,
+  selectProductsError,
+  selectProductsHydrated,
+  selectProductsLastUpdated,
+  selectProductsStatus,
+  selectSearchQuery,
+  selectSelectedCategory,
+} from '@/features/products/store/productSelectors';
 import { useProductsStore } from '@/features/products/store/useProductsStore';
-import { colors, spacing } from '@/theme/tokens';
-import type { Product } from '@/types/product';
+import { spacing } from '@/theme/tokens';
+import { useThemedStyles, type Theme } from '@/theme/useTheme';
 
 export function ProductListScreen() {
+  const router = useRouter();
+  const styles = useThemedStyles(makeStyles);
+
+  useEnsureProductsLoaded();
+
   const products = useProductsStore(selectProducts);
   const filteredProducts = useProductsStore(selectFilteredProducts);
   const categories = useProductsStore(selectCategories);
@@ -30,20 +46,14 @@ export function ProductListScreen() {
   const setCategory = useProductsStore((state) => state.setCategory);
   const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
   const clearFilters = useProductsStore((state) => state.clearFilters);
+  const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
+  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
 
   const [draftSearch, setDraftSearch] = useState(searchQuery);
 
   useEffect(() => {
     setDraftSearch(searchQuery);
   }, [searchQuery]);
-
-  useEffect(() => {
-    if (!hasHydrated || status !== 'idle') {
-      return;
-    }
-
-    void loadProducts();
-  }, [hasHydrated, loadProducts, status]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -60,11 +70,15 @@ export function ProductListScreen() {
   const showEmptyState = hasHydrated && status === 'success' && filteredProducts.length === 0;
   const showInlineError = Boolean(error) && products.length > 0;
 
+  function handleClearSearch() {
+    setDraftSearch('');
+    setSearchQuery('');
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Stack.Screen options={{ title: 'Products' }} />
-        <View style={styles.loadingContainer}>
+        <View style={styles.centeredContainer}>
           <ProductsLoadingState />
         </View>
       </SafeAreaView>
@@ -74,8 +88,7 @@ export function ProductListScreen() {
   if (showErrorState && error) {
     return (
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Stack.Screen options={{ title: 'Products' }} />
-        <View style={styles.loadingContainer}>
+        <View style={styles.centeredContainer}>
           <ProductsErrorState message={error} onRetry={() => void loadProducts()} />
         </View>
       </SafeAreaView>
@@ -84,12 +97,13 @@ export function ProductListScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <Stack.Screen options={{ title: 'Products' }} />
-      <FlashList
+      <ProductsList
+        favoriteIds={favoriteIds}
         ListEmptyComponent={
-          showEmptyState ? <ProductsEmptyState onClearFilters={clearFilters} /> : null
+          showEmptyState ? (
+            <ProductsEmptyState onClearFilters={clearFilters} variant="filters" />
+          ) : null
         }
-        ListFooterComponent={<View style={styles.footerSpacer} />}
         ListHeaderComponent={
           <ProductsListHeader
             categories={categories}
@@ -97,55 +111,33 @@ export function ProductListScreen() {
             lastUpdated={lastUpdated}
             onCategoryPress={setCategory}
             onClearFilters={clearFilters}
+            onClearSearch={handleClearSearch}
             onSearchChange={setDraftSearch}
+            resultCount={filteredProducts.length}
             searchValue={draftSearch}
             selectedCategory={selectedCategory}
             showClearFilters={hasFilters}
           />
         }
-        contentContainerStyle={styles.contentContainer}
-        data={filteredProducts}
-        ItemSeparatorComponent={ItemSeparator}
-        keyExtractor={keyExtractor}
+        onPressProduct={(id) => router.push(`/products/${id}` as Href)}
         onRefresh={() => void refreshProducts()}
+        onToggleFavorite={toggleFavorite}
+        products={filteredProducts}
         refreshing={isRefreshing}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
 
-function ItemSeparator() {
-  return <View style={styles.separator} />;
-}
-
-function renderItem({ item }: { item: Product }) {
-  return <ProductCard product={item} />;
-}
-
-function keyExtractor(item: Product) {
-  return item.id.toString();
-}
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
-  },
-  footerSpacer: {
-    height: spacing.xl,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  safeArea: {
-    backgroundColor: colors.background,
-    flex: 1,
-  },
-  separator: {
-    height: spacing.md,
-  },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    centeredContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    safeArea: {
+      backgroundColor: colors.background,
+      flex: 1,
+    },
+  });

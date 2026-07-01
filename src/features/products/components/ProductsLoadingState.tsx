@@ -1,27 +1,51 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
-import { AppText } from '@/components/ui/AppText';
-import { colors, spacing } from '@/theme/tokens';
+import { SkeletonBlock } from '@/features/products/components/SkeletonBlock';
+import { spacing } from '@/theme/tokens';
 
 export function ProductsLoadingState() {
   return (
-    <AppCard>
-      <View style={styles.content}>
-        <ActivityIndicator color={colors.accent} size="large" />
-        <AppText variant="subheading">Loading catalogue</AppText>
-        <AppText color="secondary">
-          Fetching the latest products from the API and preparing your catalogue.
-        </AppText>
+    <View style={styles.content}>
+      <SkeletonBlock height={44} width="34%" />
+      <SkeletonBlock height={40} width="78%" />
+      <SkeletonBlock height={52} />
+      <View style={styles.chips}>
+        <SkeletonBlock height={36} radius={999} width={82} />
+        <SkeletonBlock height={36} radius={999} width={106} />
+        <SkeletonBlock height={36} radius={999} width={92} />
       </View>
-    </AppCard>
+
+      {[0, 1, 2].map((item) => (
+        <AppCard key={item} style={styles.card}>
+          <SkeletonBlock height={104} width={104} />
+          <View style={styles.cardCopy}>
+            <SkeletonBlock height={14} width="45%" />
+            <SkeletonBlock height={22} width="82%" />
+            <SkeletonBlock height={16} />
+            <SkeletonBlock height={16} width="92%" />
+          </View>
+        </AppCard>
+      ))}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    alignItems: 'center',
+  card: {
+    flexDirection: 'row',
     gap: spacing.md,
-    paddingVertical: spacing.xxl,
+    padding: spacing.md,
+  },
+  cardCopy: {
+    flex: 1,
+    gap: spacing.sm,
+  },
+  chips: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  content: {
+    gap: spacing.lg,
   },
 });

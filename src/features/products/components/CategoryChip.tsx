@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { radius, spacing } from '@/theme/tokens';
+import { useThemedStyles, type Theme } from '@/theme/useTheme';
 
 type CategoryChipProps = {
   active: boolean;
@@ -10,9 +11,12 @@ type CategoryChipProps = {
 };
 
 export function CategoryChip({ active, label, onPress }: CategoryChipProps) {
+  const styles = useThemedStyles(makeStyles);
+
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.chip,
@@ -27,24 +31,25 @@ export function CategoryChip({ active, label, onPress }: CategoryChipProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  chip: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    minHeight: 38,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  activeChip: {
-    backgroundColor: colors.textPrimary,
-    borderColor: colors.textPrimary,
-  },
-  label: {
-    textTransform: 'capitalize',
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    chip: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      minHeight: 38,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    activeChip: {
+      backgroundColor: colors.textPrimary,
+      borderColor: colors.textPrimary,
+    },
+    label: {
+      textTransform: 'capitalize',
+    },
+    pressed: {
+      opacity: 0.88,
+    },
+  });
