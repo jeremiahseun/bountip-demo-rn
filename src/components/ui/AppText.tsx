@@ -1,10 +1,12 @@
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, Text, type StyleProp, type TextProps, type TextStyle } from 'react-native';
 
-import { colors, typography } from '@/theme/tokens';
+import type { Palette } from '@/theme/tokens';
+import { typography } from '@/theme/tokens';
+import { useTheme } from '@/theme/useTheme';
 
 type AppTextVariant = keyof typeof typography;
-type AppTextColor = 'primary' | 'secondary' | 'muted' | 'inverse' | 'accent' | 'danger';
+type AppTextColor = 'primary' | 'secondary' | 'muted' | 'inverse' | 'onAccent' | 'accent' | 'danger';
 
 type AppTextProps = PropsWithChildren<{
   color?: AppTextColor;
@@ -13,14 +15,19 @@ type AppTextProps = PropsWithChildren<{
 }> &
   TextProps;
 
-const colorMap: Record<AppTextColor, string> = {
-  primary: colors.textPrimary,
-  secondary: colors.textSecondary,
-  muted: colors.textMuted,
-  inverse: colors.textInverse,
-  accent: colors.accent,
-  danger: colors.danger,
-};
+function resolveColor(palette: Palette, color: AppTextColor): string {
+  const colorMap: Record<AppTextColor, string> = {
+    primary: palette.textPrimary,
+    secondary: palette.textSecondary,
+    muted: palette.textMuted,
+    inverse: palette.textInverse,
+    onAccent: palette.onAccent,
+    accent: palette.accent,
+    danger: palette.danger,
+  };
+
+  return colorMap[color];
+}
 
 export function AppText({
   children,
@@ -29,9 +36,11 @@ export function AppText({
   variant = 'body',
   ...textProps
 }: AppTextProps) {
+  const { colors } = useTheme();
+
   return (
     <Text
-      style={[styles.base, typography[variant], { color: colorMap[color] }, style]}
+      style={[styles.base, typography[variant], { color: resolveColor(colors, color) }, style]}
       {...textProps}
     >
       {children}
