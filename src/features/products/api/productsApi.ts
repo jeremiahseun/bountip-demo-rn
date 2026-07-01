@@ -22,6 +22,7 @@ async function requestProducts<T>(path: string): Promise<T> {
   let response: Response;
 
   try {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     response = await fetch(`${API_BASE_URL}${path}`);
   } catch {
     throw new ProductApiError('Network error. Check your connection and try again.', 0);
